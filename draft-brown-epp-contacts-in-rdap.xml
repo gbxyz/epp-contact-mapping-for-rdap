@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd"
+[
+
+<!ENTITY RFC2119 SYSTEM
+  "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml">
+
+<!ENTITY RFC4627 SYSTEM
+  "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4627.xml">
+
+<!ENTITY RFC5733 SYSTEM
+  "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5733.xml">
+
+<!ENTITY RFC6350 SYSTEM
+  "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6350.xml">
+
+<!ENTITY RFC7095 SYSTEM
+  "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7095.xml">
+
+<!ENTITY RFC7483 SYSTEM
+  "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7483.xml">
+
+]>
+<?xml-stylesheet type="text/xsl" href="rfc2629.xslt" ?>
+<?rfc strict="yes" ?>
+<?rfc toc="yes"?>
+<?rfc tocdepth="4"?>
+<?rfc symrefs="yes"?>
+<?rfc sortrefs="yes" ?>
+<?rfc compact="yes" ?>
+<?rfc subcompact="no" ?>
+<?rfc comments="yes" ?>
+<?rfc inline="yes" ?>
+
+<rfc category="exp" docName="draft-brown-epp-contacts-in-rdap-00"
+  ipr="trust200902" submissionType="independent">
+
+  <front>
+    <title abbrev="EPP Contact Mapping for RDAP">Extensible Provisioning
+    Protocol (EPP) Contact Mapping for Registration Data Access Protocol
+    (RDAP) JSON Responses</title>
+
+    <author fullname="Gavin Brown" initials="G" surname="Brown">
+      <organization>CentralNic Group plc</organization>
+      <address>
+        <postal>
+        <street>35-39 Moorgate</street>
+        <city>London</city>
+        <region>England</region>
+        <code>EC2R 6AR</code>
+        <country>GB</country>
+        </postal>
+        <phone>+44 20 33 88 0600</phone>
+        <email>gavin.brown@centralnic.com</email>
+        <uri>https://www.centralnic.com</uri>
+      </address>
+    </author>
+    <date month="February" year="2019" />
+    <area>Applications</area>
+    <workgroup>Internet Engineering Task Force</workgroup>
+
+    <abstract><t>This document describes how EPP contact objects can be
+    represented in RDAP entities.</t></abstract>
+  </front>
+
+  <middle>
+    <section title="Introduction">
+
+      <t>The Registration Data Access Protocol (RDAP, <xref
+      target="RFC7483"/>) represents contact information pertaining to
+      the entities associated with internet identifiers (such as domain
+      names, IP address blocks, and autonmymous system numbers) using
+      jCard (<xref target="RFC7095"/>). jCard is a JSON mapping of vCard
+      (<xref target="RFC6350"/>) into JSON
+      (<xref target="RFC4627"/>).</t>
+
+      <t>vCard is a generalised specification for entries in an
+      "address book", and provides a broad and extensible framework for
+      storing attributes associated with an individual, group or
+      organisation. However, as RDAP has been deployed by Regional
+      Internet Registries (RIRs) and domain name registries (DNRs), the
+      complexity of the jCard has been identified as having a negative
+      effect on the ease of implementing the RDAP specifications.</t>
+
+      <t>The Extensible Provisioning Protocol (EPP) is widely deployed
+      by domain name registries to facilitate provisioning of domain
+      names and other objects by registrars. The EPP Contact Mapping,
+      defined in <xref target="RFC5733"/>, provides a lightweight
+      structure to describe contact information such as name,
+      organization, postal and addresses, and voice and fax numbers.</t>
+
+      <t>This document describes a way to map the structure of contact
+      information described in RFC5733 into JSON, and also how this
+      representation can be used in RDAP entity objects instead of
+      jCard.</t>
+
+      <section title="Conventions Used in This Document">
+        <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+        NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and
+        "OPTIONAL" in this document are to be interpreted as described
+        in <xref target="RFC2119"/>.</t>
+      </section>
+
+    </section>
+
+    <section title="JSON Mapping of EPP Contact Objects">
+      <t>This mapping is limited to the attributes of contact objects
+      described in sections 2.3 - 2.6 of RFC 5733. Other attributes,
+      such as unique IDs, status codes, and event actions, are already
+      adequately mapped to generic RDAP object attributes.</t>
+
+      <t>An EPP contact object may be represented in JSON by
+      constructing a JSON object with the following properties:</t>
+
+      <t><list style="hanging">
+        <t hangText="postalInfo">this property is an object that
+        contains the postal address information.</t>
+        <t hangText="voice">this property is a string containing the
+        voice number.</t>
+        <t hangText="fax">this property is a string containing the
+        facsimile number.</t>
+        <t hangText="email">this property is a string containing the
+        email address.</t>
+      </list></t>
+
+      <t>The "voice", "fax" and "email" properties MAY be omitted or NULL,
+      but if present, MUST be valid as per the validation rules described
+      in the XML schema in RFC 5733.</t>
+      
+      <section title="Postal Address Information">
+        <t>Every contact has associated postal-address information which
+        may be represented in either ASCII (for international use) or
+        UTF-8 (for domestic use).</t>
+
+        <t>The "postalInfo" property is an object with two properties:
+        "int" and "loc". These properties may contain postal information
+        or may either be omitted or NULL, but at least one MUST be
+        present and contain valid postal address information.</t>
+
+        <t>The postal address information in the "loc" object may
+        contain any valid UTF-8 sequence, but the data in the "int"
+        object MUST NOT contain any characters outside the ASCII range
+        (U+0000 - U+007F).</t>
+
+        <t>The "int" and "loc" properties are JSON objects which may
+        contain any of the following:</t>
+
+        <t><list style="hanging">
+          <t hangText="name">a string containing the contact name.</t>
+          <t hangText="org">a string containing the organization.</t>
+          <t hangText="addr">an object containing the following
+          properties:
+            <list style="hanging">
+              <t hangText="street">a JSON array containing between one
+              and three strings contain the street address.</t>
+              <t hangText="city">a string containing the city.</t>
+              <t hangText="sp">a string containing the state or
+                province.</t>
+              <t hangText="pc">a string containing the postal code.</t>
+              <t hangText="cc">the two-character country identifier
+              specified in ISO 3166.</t>
+            </list>
+          </t>
+        </list></t>
+
+      </section>
+
+      <section title="Example">
+        <t>The following is a JSON representation of the example contact
+        object shown in Section 3.1.2 of RFC 5733:</t>
+        <figure><artwork>
+  {
+    "postalInfo": {
+      "int": {
+        "name": "John Doe",
+        "org": "Example Inc.",
+        "addr": {
+          "street": [
+            "123 Example Dr.",
+            "Suite 100"
+          ],
+          "city": "Dulles",
+          "sp": "VA",
+          "pc": "20166-6503",
+          "cc": "US",
+        },
+      },
+      "loc": NULL
+    },
+    "voice": "+1.7035555555x1234",
+    "fax": "+1.7035555556",
+    "email": "jdoe@example.com"
+  }
+</artwork></figure>
+
+      </section>
+
+    </section>
+
+    <section title="Usage in RDAP">
+      <t>RDAP servers MAY use the contact object representation
+      described in this document in entity object instead of jCard.</t>
+
+      <t>RDAP servers which do so MUST add the "epp_entity_contact_info_level_0"
+      string to the "rdapConformance" array at the top-level of the RDAP
+      response. This string as has been registered with IANA.</t>
+
+      <t>In place of the "vCardArray" property, servers may then insert
+      an "eppContactInfo" property, whose value is a JSON object
+      described in this document.</t>
+
+      <section title="Example">
+        <t>The following is an example of an RDAP entity which uses the
+        EPP contact mapping instead of jCard:</t>
+        <figure><artwork>
+
+{
+  "rdapConformance": [
+    "rdap_level_0",
+    "epp_entity_contact_info_level_0"
+  ],
+  "objectClassName": "entity",
+  "handle": "SH8013-REP",
+  "eppContactInfo": {
+    "postalInfo": {
+      "int": {
+        "name": "John Doe",
+        "org": "Example Inc.",
+        "addr": {
+          "street": [
+            "123 Example Dr.",
+            "Suite 100"
+          ],
+          "city": "Dulles",
+          "sp": "VA",
+          "pc": "20166-6503",
+          "cc": "US",
+        },
+      },
+      "loc": NULL
+    },
+    "voice": "+1.7035555555x1234",
+    "fax": "+1.7035555556",
+    "email": "jdoe@example.com"
+  },
+  // rest of entity
+}
+
+        </artwork></figure>
+      </section>
+    </section>
+
+    <section anchor="Privacy" title="Privacy Considerations">
+      <t>TODO.</t>
+    </section>
+
+    <section anchor="IANA" title="IANA Considerations">
+      <t>TODO.</t>
+    </section>
+
+  </middle>
+
+  <back>
+
+    <references title="Normative References">
+      &RFC2119;
+      &RFC4627;
+      &RFC5733;
+      &RFC7483;
+    </references>
+
+    <references title="Informative References">
+      &RFC6350;
+      &RFC7095;
+    </references>
+
+  </back>
+</rfc>
